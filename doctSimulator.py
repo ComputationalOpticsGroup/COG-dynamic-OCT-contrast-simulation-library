@@ -1,5 +1,6 @@
 import numpy as np
 import cupy as cp
+import cupyx as cpx
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -8,8 +9,7 @@ class numerical3dFieldParameters:
         self.phyField = phyField
         self.anaField = anaField
         self.pixNum = pixNum
-        self.pixSeparation = anaField / pixNum
-        self.pixSeparation = np.array(self.pixSeparation, dtype='float64')
+        self.pixSeparation = np.array(anaField / pixNum, dtype='float64')
         self.waveLength = waveLength
 
 
@@ -49,12 +49,17 @@ class scattererPositions:
             self.velocityPhi = motionParam[1] * np.ones(self.numScatter)
             self.velocityTheta = motionParam[2] * np.ones(self.numScatter)
 
+        if self.motion == 'flow/shiftComputation':
+            self.velocityAmp = motionParam[0] * np.ones(self.numScatter)
+            self.velocityPhi = motionParam[1] * np.ones(self.numScatter)
+            self.velocityTheta = motionParam[2] * np.ones(self.numScatter)
+
         if self.motion == 'diffusion':
             self.dCoeff = motionParam
 
     def positionsUpdate(self, dt):
         randomDelta = np.zeros((3, self.numScatter), dtype='float64')
-        if self.motion == 'randomBallistic' or self.motion == 'flow':
+        if self.motion == 'randomBallistic' or self.motion == 'flow' or self.motion == 'flow/shiftComputation' :
             randomDelta[0] = self.velocityAmp * np.sin(self.velocityPhi) * np.cos(self.velocityTheta) * dt
             randomDelta[1] = self.velocityAmp * np.sin(self.velocityPhi) * np.sin(self.velocityTheta) * dt
             randomDelta[2] = self.velocityAmp * np.cos(self.velocityPhi) * dt
@@ -143,6 +148,38 @@ class scattererField:
             for result in executor.map(threaded, np.array_split(allList, numChunk, axis=1)):
                 scattererField += result
         self.scattererField = scattererField
+    def flowShift(self, scatPosition, dt):
+        if not isinstance(scatPosition, scattererPositions):
+            raise TypeError("scatPosition must be an instance of scattererPositions")
+        if isinstance(scatPosition, scattererPositions):
+            if not scatPosition.motion == 'flow/shiftComputation':
+                raise TypeError("Motion type must be flow and users want to fast compute the speckle")
+        randomDelta = np.zeros((3, scatPosition.numScatter), dtype='float64')
+        randomDelta[0] = scatPosition.velocityAmp * np.sin(scatPosition.velocityPhi) * np.cos(scatPosition.velocityTheta) * dt
+        randomDelta[1] = scatPosition.velocityAmp * np.sin(scatPosition.velocityPhi) * np.sin(scatPosition.velocityTheta) * dt
+        randomDelta[2] = scatPosition.velocityAmp * np.cos(scatPosition.velocityPhi) * dt
+
+        shift_pixel = randomDelta / self.numFieldParam.pixSeparation
+
+        space_x = np.fft.fftfreq(self.numFieldParam.pixNum[0])
+        space_y = np.fft.fftfreq(self.numFieldParam.pixNum[1])
+        space_z = np.fft.fftfreq(self.numFieldParam.pixNum[2])
+        fx3, fy3, fz3 = np.meshgrid(space_x, space_y, space_z, indexing='ij')
+
+        shift_matrix = np.exp(-2j * np.pi * (fx3 * shift_pixel[0] + fy3 * shift_pixel[1] + fz3 * shift_pixel[2]))
+
+        def dataShift(data, shift_matrix):
+            data_cupy = cp.asarray(data)
+            shift_matrix_cupy = cp.asarray(shift_matrix)
+            data_FFT = cpx.scipy.fft.fftn(data_cupy)
+
+            shifted_FFT = data_FFT * shift_matrix_cupy
+
+            data_shifted = cp.asnumpy(cpx.scipy.fft.ifftn(shifted_FFT))
+            return data_shifted
+
+        self.scattererField = dataShift(self.scattererField, shift_matrix)
+        scatPosition.positionsUpdate(dt)
 
 
 class complexPsfField:

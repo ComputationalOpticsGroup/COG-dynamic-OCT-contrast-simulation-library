@@ -195,7 +195,7 @@ class complexPsfField:
 
         if psfParam.resType == 'default':
             w = np.array(
-                [psfParam.res[0] / 2, psfParam.res[1] / 2, psfParam.res[2] / np.sqrt(2.0 * np.log(2.0))]) * 1e-6
+                [psfParam.res[0] / 2, psfParam.res[1] / 2, psfParam.res[2] / np.sqrt(2.0 * np.log(2.0))]) 
         interMediate = np.array(w/numFieldParam.pixSeparation, dtype='float64')
         print(interMediate)
 

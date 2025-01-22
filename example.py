@@ -9,7 +9,7 @@ lmd_c = 1.31e-6
 scaDensity = 0.055 * 1e18
 index = 800
 vAmp = 0.225e-6 * index / 50
-res = np.array([18, 18, 14])
+res = np.array([18, 18, 14])* 1e-6
 dt = 0.2048
 nFrames = 32
 

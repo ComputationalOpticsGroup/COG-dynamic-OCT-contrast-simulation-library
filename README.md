@@ -16,7 +16,7 @@ Mono-direction traslation model
 Manuals
 ------------------------
 - Example code to generate the 32-time time-sequence of OCT speckle considering the scatterer motion model as the random ballistic model using this library can be found [here](example.py).
-- Module design can be found [here](documents\Dynamic OCT simulator_ Module design.docx).
+- Module design can be found [here](documents\Module_design.docx).
 
 License
 -----------------------

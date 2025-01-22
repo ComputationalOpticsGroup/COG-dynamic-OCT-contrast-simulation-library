@@ -184,7 +184,7 @@ class scattererField:
 
 class complexPsfField:
     def __init__(self, numFieldParam, psfParam, peak_intensity=1.0):
-        self.paddedPSFSpectrum = None
+        self.PSFSpectrum = None
         self.numFieldParam = numFieldParam
         self.psfPram = psfParam
         w = None
@@ -206,34 +206,16 @@ class complexPsfField:
         zField = np.transpose(xField, (2, 1, 0))
         self.psfField = np.exp(-(xField / interMediate[0]) ** 2) * np.exp(-(yField / interMediate[1]) ** 2) * np.exp(-(zField / interMediate[2]) ** 2)
 
-
-        self.buff_zeroMarginSize = self.optimalZeroMarginSizeForFftGet()
         self.flag_psfSpectrum = False
 
-    def psfSpectrumGet(self, zeroMarginSize):
-        if not self.flag_psfSpectrum or self.buff_zeroMarginSize != zeroMarginSize:
+    def psfSpectrumGet(self):
+        if not self.flag_psfSpectrum:
             psfField_cp = cp.asarray(self.psfField)
-            paddedPSF = cp.pad(psfField_cp, ((zeroMarginSize, zeroMarginSize), (zeroMarginSize, zeroMarginSize),
-                                             (zeroMarginSize, zeroMarginSize)), 'constant', constant_values=0)
-            self.paddedPSFSpectrum = cp.fft.fftn(paddedPSF)
+            self.PSFSpectrum = cp.fft.fftn(psfField_cp)
             self.flag_psfSpectrum = True
-            self.buff_zeroMarginSize = zeroMarginSize
-            return self.paddedPSFSpectrum
+            return self.PSFSpectrum
         else:
-            return self.paddedPSFSpectrum
-
-    def optimalZeroMarginSizeForFftGet(self):
-        original_shape = self.psfField.shape
-        padding_sizes = [self._getPaddingSize(dim) for dim in original_shape]
-        return max(padding_sizes)
-
-    @staticmethod
-    def _getPaddingSize(size):
-
-        n = 1
-        while n < size:
-            n *= 2
-        return (n - size) // 2
+            return self.PSFSpectrum
 
 
 class complexOctField:
@@ -243,29 +225,20 @@ class complexOctField:
 
     def generate(self, scattererField, psfField):
         scatField = cp.asarray(scattererField.scattererField)
-        zeroMarginSize = psfField.buff_zeroMarginSize
-        original_size = scattererField.numFieldParam.pixNum
-        padded_scatField = cp.pad(scatField, ((zeroMarginSize, zeroMarginSize), (zeroMarginSize, zeroMarginSize),
-                                              (zeroMarginSize, zeroMarginSize)), 'constant', constant_values=0)
 
-        padded_scatField_spectrum = cp.fft.fftn(padded_scatField)
-        paddedPSFSpectrum = psfField.paddedPSFSpectrum
-        convolved_spectrum = padded_scatField_spectrum * paddedPSFSpectrum
+        scatField_spectrum = cp.fft.fftn(scatField)
+        PSFSpectrum = psfField.PSFSpectrum
+        convolved_spectrum = scatField_spectrum * PSFSpectrum
         convolved_field = cp.fft.ifftn(convolved_spectrum)
-        cropped_convolved_field = convolved_field[
-                                  zeroMarginSize:original_size[0] + zeroMarginSize,
-                                  zeroMarginSize:original_size[1] + zeroMarginSize,
-                                  zeroMarginSize:original_size[2] + zeroMarginSize
-                                  ]
-        cropped_convolved_field = cp.asnumpy(cropped_convolved_field)
-        self.complexOctField = cropped_convolved_field
+        convolved_field = cp.asnumpy(convolved_field)
+        self.complexOctField = convolved_field
+
 
 class complexNoiseField:
     def __init__(self, numFieldParam, psfField):
         self.numFieldParam = numFieldParam
         self.psfField = psfField
         self.field = None
-
 
     def generate(self, noiseEnergies, del_lmd = 50):
         var_r_det = noiseEnergies[0] / 2
@@ -291,7 +264,6 @@ class complexNoiseField:
         RIN = cp.fft.ifftn(RIN_freq)
         RIN_rescaled = noiseEnergies[1] * RIN / np.mean(np.abs(RIN) ** 2)
 
-
         var_r_sh = noiseEnergies[2] / 2
         std_shot = np.sqrt(var_r_sh)
         Shot_real = np.random.normal(0, std_shot, self.numFieldParam.pixNum)
@@ -304,12 +276,4 @@ class complexNoiseField:
         Shot_rescaled = noiseEnergies[2] * Shot / np.mean(np.abs(Shot) ** 2)
 
         self.field = Det_rescaled + RIN_rescaled + Shot_rescaled
-
-
-
-
-
-
-
-
         

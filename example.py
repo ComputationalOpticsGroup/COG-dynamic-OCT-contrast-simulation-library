@@ -1,6 +1,6 @@
 import doctSimulator as dos
 import numpy as np
-import cupy as cp
+import matplotlib.pyplot as plt
 
 simuFieldSize = np.array([195., 195., 724.]) * 1e-6
 totalFieldSize = np.array([345., 345., 874.]) * 1e-6
@@ -21,19 +21,15 @@ scaPos.velocitiesSet('randomBallistic', vAmp)
 scaField = dos.scattererField(n3D)
 scaField.generate(scaPos)
 psfField = dos.complexPsfField(n3D, psfParam)
-psfField.psfSpectrumGet(psfField.buff_zeroMarginSize)
+psfField.psfSpectrumGet()
 
 octField = dos.complexOctField(n3D)
 octField.generate(scaField, psfField)
 for i in range(nFrames):
-    time.time
     scaPos.positionsUpdate(dt)    ## scat moving
     scaField.generate(scaPos)
     octField.generate(scaField, psfField)
 
-
-
-
-
-
-
+# Show output
+plt.imshow(np.abs(octField.complexOctField[0, :, :]))
+plt.show()

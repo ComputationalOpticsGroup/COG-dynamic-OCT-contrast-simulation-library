@@ -9,8 +9,8 @@ This library is released by [Computational Optics Group at the University of Tsu
 
 Available scatterer motion models
 ---------------------------
-Random ballistic model
-Diffsusion model
+Random ballistic model  
+Diffsusion model  
 Mono-direction traslation model
 
 Manuals

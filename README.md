@@ -11,7 +11,7 @@ Basement theory
 ---------------------------
 Some theoretical and scientifical bouckgorunds of this libaray is available at the following references.
 1. Y.K. Feng et al., "Dynamic OCT simulator based on mathematical models of intratissue dynamics, image formation, and measurement noise
-", Proc. SPIE 13305, Optical Coherence Tomography and Coherence Domain Optical Methods in Biomedicine XXVIII, (2025) [PDF](documents\SPIE_Proceeding_2025.pdf).
+", Proc. SPIE 13305, Optical Coherence Tomography and Coherence Domain Optical Methods in Biomedicine XXIX, (2025) [PDF](documents\SPIE_Proceeding_2025.pdf).
 2. Y.K. Feng et al., "Mathematical modeling of intracellular and intratissue activities for understanding dynamic optical coherence tomography signals", Proc. SPIE 12830, Optical Coherence Tomography and Coherence Domain Optical Methods in Biomedicine XXVIII, 128300H (12 March 2024) [PDF](documents\SPIE_Proceeding_2024.pdf).
 
 Scatterer motion models are as follows

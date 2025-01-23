@@ -32,4 +32,4 @@ This library is licensed under either of the following options.
 2. Any licenses except for GNU LGPLv3 as far as the authors and the uses agree for it. It may include business licenses, closed-source licenses, and others. 
  
 Option 1 (GNU LGPLv3) can be selected without notifying the authors. (However, it is recommended to cite this web-site and the proper reference listed in "Basement theory" sections when you publish research papers using this library.)
-If you want to select any other licensing conditions except for GNU LGPLv3 (i.e., Option 2), please contact the corresponding author (Yoshiaki Yasuno, University of Tsukuba, <yoshiaki.yasuno@cog-labs.org>) to obtain an explicit agreement.
+If you want to select any other licensing conditions except for GNU LGPLv3 (i.e., Option 2), please contact the corresponding author (Yoshiaki Yasuno, University of Tsukuba, (<yoshiaki.yasuno@cog-labs.org>) to obtain an explicit agreement.

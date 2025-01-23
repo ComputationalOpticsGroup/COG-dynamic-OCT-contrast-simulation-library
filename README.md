@@ -1,4 +1,4 @@
-# Dynamic-optical-coherence-tomography simulation library by computational optics group (COG DOCT-simulator library) 
+# Dynamic-optical-coherence-tomography simulation library by computational optics group: COG DOCT-simulation library
 
 
 The COG DOCT-simulator library is a Python library which provides the classes and functions to simulate a time-sequence of OCT speckle with the modeling of the scatterer motions.

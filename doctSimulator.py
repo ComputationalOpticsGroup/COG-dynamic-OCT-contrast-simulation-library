@@ -13,32 +13,67 @@ class numerical3dFieldParameters:
         self.waveLength = waveLength
 
 
+
+class numerical0dParameters:
+    def __init__(self, totalTime, res, waveLength):
+        self.totalTime = totalTime
+        self.res = np.array(res)
+        self.waveLength = waveLength
+
+
 class complexPsfParameters:
     def __init__(self, res, resType='default'):
-        self.res = res
+        self.res = np.array(res)
         self.resType = resType
         self.psfType = 'Gaussian'
 
 
 class scattererPositions:
-    def __init__(self, scatterDensity, numFieldParam, r=1.0):
-        if not isinstance(numFieldParam, numerical3dFieldParameters):
-            raise TypeError("numFieldParam must be an instance of numerical3dFieldParameters")
-        self.phyField = numFieldParam.phyField
+    def __init__(self, scatterDensity, numFieldParam, motion, motionParam, r=1.0):
+        if not isinstance(numFieldParam, (numerical3dFieldParameters, numerical0dParameters)):
+            raise TypeError("numFieldParam must be an instance of numerical3dFieldParameters or numerical0dParamters")
+        if isinstance(numFieldParam, numerical3dFieldParameters):
+            self.phyField = numFieldParam.phyField
 
-        self.numScatter = int(scatterDensity * np.prod(self.phyField))
+            self.numScatter = int(scatterDensity * np.prod(self.phyField))
 
-        self.scatterArray = self.phyField[:, None] * np.random.rand(3, self.numScatter)
-        self.reflectivity = r
+            self.scatterArray = self.phyField[:, None] * np.random.rand(3, self.numScatter)
+            self.reflectivity = r
 
-        self.motion = None
-        self.velocityAmp = None
-        self.velocityPhi = None
-        self.velocityTheta = None
-        self.dCoeff = None
+            self.motion = motion
+            self.motionParam = motionParam
+            self.velocityAmp = None
+            self.velocityPhi = None
+            self.velocityTheta = None
+            self.dCoeff = None
 
-    def velocitiesSet(self, motion, motionParam):
-        self.motion = motion
+
+        if isinstance(numFieldParam, numerical0dParameters):
+            res_x, res_y, res_z = numFieldParam.res
+            std_E = [1/(2*np.sqrt(2))*res_x, 1/(2*np.sqrt(2))*res_y, 1/(2*np.sqrt(np.log(2)))*res_z]
+            std_I = 1 / np.sqrt(2) * np.array(std_E)
+            if self.motion == 'randomBallistic':
+                maxDis = motionParam * numFieldParam.totalTime
+            if self.motion == 'flow':
+                maxDis = motionParam[0] * numFieldParam.totalTime
+            if self.motion == 'diffusion':
+                maxDis = np.sqrt(motionParam[0] * numFieldParam.totalTime *2./3.)
+            self.phyField = np.array(std_I * 5. + [2.* maxDis, 2.* maxDis, 2.* maxDis])
+            self.numScatter = int(scatterDensity * np.prod(self.phyField))
+            self.scatterArray = self.phyField[:, None] * np.random.rand(3, self.numScatter)
+            self.reflectivity = r
+            self.motionParam = motionParam
+            self.velocityAmp = None
+            self.velocityPhi = None
+            self.velocityTheta = None
+            self.dCoeff = None
+
+
+
+
+
+    def velocitiesSet(self):
+        motionParam = self.motionParam
         if self.motion == 'randomBallistic':
             self.velocityAmp = motionParam * np.ones(self.numScatter)
             self.velocityPhi = np.random.uniform(0, np.pi, self.numScatter)
@@ -233,6 +268,17 @@ class complexOctField:
         convolved_field = cp.asnumpy(convolved_field)
         self.complexOctField = convolved_field
 
+class complexOctPixel:
+    def __init__(self, num0dParam):
+        self.num0dParam = num0dParam
+        self.complexOctPixel = None
+
+    def generate(self,scattererPositions):
+        res_x, res_y, res_z = self.num0dParam.res
+        std_E = [1 / (2 * np.sqrt(2)) * res_x, 1 / (2 * np.sqrt(2)) * res_y, 1 / (2 * np.sqrt(np.log(2))) * res_z]
+        x, y, z = scattererPositions.scatterArray
+        refArray = scattererPositions.reflectivity * np.ones(scattererPositions.numScatter)
+        self.complexOctPixel = np.sum(refArray * np.exp(1j * (4. * np.pi / self.num0dParam.waveLength * z ))*np.exp(-1/2*((x/std_E[0])**2 + (y/std_E[1])**2 + (z/std_E[2])**2 )))
 
 class complexNoiseField:
     def __init__(self, numFieldParam, psfField):

@@ -49,6 +49,7 @@ class scattererPositions:
 
 
         if isinstance(numFieldParam, numerical0dParameters):
+            self.motion = motion
             res_x, res_y, res_z = numFieldParam.res
             std_E = [1/(2*np.sqrt(2))*res_x, 1/(2*np.sqrt(2))*res_y, 1/(2*np.sqrt(np.log(2)))*res_z]
             std_I = 1 / np.sqrt(2) * np.array(std_E)

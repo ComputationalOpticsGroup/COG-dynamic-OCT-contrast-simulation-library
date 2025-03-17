@@ -55,11 +55,14 @@ class scattererPositions:
             std_I = 1 / np.sqrt(2) * np.array(std_E)
             if self.motion == 'randomBallistic':
                 maxDis = motionParam * numFieldParam.totalTime
+                self.phyField = np.array(std_I * 5. + [2. * maxDis, 2. * maxDis, 2. * maxDis])
             if self.motion == 'flow':
                 maxDis = motionParam[0] * numFieldParam.totalTime
+                self.phyField = np.array(std_I * 5. + [2. * maxDis, 2. * maxDis, 2. * maxDis])
             if self.motion == 'diffusion':
-                maxDis = np.sqrt(motionParam[0] * numFieldParam.totalTime *2./3.)
-            self.phyField = np.array(std_I * 5. + [2.* maxDis, 2.* maxDis, 2.* maxDis])
+                maxDis = np.sqrt(motionParam[0] * numFieldParam.totalTime *2.)
+                self.phyField = np.array(std_I * 5. + [3. * maxDis, 3. * maxDis, 3. * maxDis])
+
             self.numScatter = int(scatterDensity * np.prod(self.phyField))
             self.scatterArray = self.phyField[:, None] * np.random.rand(3, self.numScatter)
             self.reflectivity = r
